@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Recreate “Hex Rover” Visualization — The Martian (2015)</title>
+</head>
+<body style="font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#222;background:#fff;margin:0;padding:0;">
+
+  <div style="max-width:920px;margin:0 auto;padding:24px 16px; font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#222;background:#fff;margin:0;padding:0;">
+
+<h1 style="font-size:1.6rem;line-height:1.2;margin:0 0 8px;">Recreate the “Hex Rover” Visualization</h1>
+    <p style="color:#555;font-size:0.92rem;margin:8px 0;">Inspired by <em>The Martian</em> (2015). You will convert ASCII to hex, rotate a virtual robot to face hex digits laid out in a circle, and display state each step.</p>
+
+    <div style="background:#f5f7fb;padding:12px 14px;border-radius:8px;" role="region" aria-label="Scene references">
+        <strong>Scene references</strong>
+        <ul style="margin:8px 0 8px 22px;">
+            <li>Scene 1: Prelude and Setup — <a href="https://www.youtube.com/watch?v=8TF6CeHO3G4" target="_blank" rel="noopener" style="color:#0b6efb;text-decoration:none;">https://www.youtube.com/watch?v=8TF6CeHO3G4</a></li>
+            <li>Scene 2: Implementation — <a href="https://www.youtube.com/watch?v=NttUBB98zg4" target="_blank" rel="noopener" style="color:#0b6efb;text-decoration:none;">https://www.youtube.com/watch?v=NttUBB98zg4</a></li>
+        </ul>
+    </div>
+
+    <h2 style="font-size:1.25rem;line-height:1.2;margin-top:20px;margin-bottom:8px;">Task overview</h2>
+    <p style="margin:8px 0;">Build a simple visualization that rotates a robot avatar to point at one of 16 hex digits arranged on a circle. You take an ASCII message, convert to hex, and drive the robot to each digit in sequence.</p>
+
+    <h2 style="font-size:1.25rem;line-height:1.2;margin-top:20px;margin-bottom:8px;">System model</h2>
+    <ul style="margin:8px 0 8px 22px;">
+        <li>Digits: <code style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f4f6f8;padding:1px 4px;border-radius:4px;">0 1 2 3 4 5 6 7 8 9 A B C D E F</code> at equal angular spacing on a circle.</li>
+        <li>Indexing: 16 slots. Slot <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">k</code> at angle <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">θ(k) = k × 22.5°</code>.</li>
+        <li>Zero reference: slot <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">0</code> at <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">0°</code> at the top. Angles increase clockwise.</li>
+        <li>Robot heading (i.e., where robot is looking): starts at <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">0°</code> unless you choose to resume from prior state.&nbsp;</li>
+    </ul>
+
+    <h2 style="font-size:1.25rem;line-height:1.2;margin-top:20px;margin-bottom:8px;">What you must implement</h2>
+    <div style="display:grid;gap:10px;grid-template-columns: repeat(auto-fit,minmax(45%,1fr));">
+
+        <div style="background:#fff;border:1px solid #e5e8ef;border-radius:8px;padding:12px 14px;">
+            <h3 style="font-size:1.05rem;line-height:1.2;margin-top:16px;margin-bottom:8px;color:#555;">1) ASCII → hex</h3>
+            <ul style="margin:8px 0 8px 22px;">
+                <li>Convert input ASCII text to hexadecimal octets. Example: <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">"HI"</code> → <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">48 49</code>.</li>
+                <li>Emit a flat sequence of hex digits. Example: <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">48 49</code> → <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">4 8 4 9</code>.</li>
+            </ul>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e5e8ef;border-radius:8px;padding:12px 14px;">
+            <h3 style="font-size:1.05rem;line-height:1.2;margin-top:16px;margin-bottom:8px;color:#555;">2) Digit mapping</h3>
+            <ul style="margin:8px 0 8px 22px;">
+                <li>Function <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">k(d)</code> maps digits&nbsp;<code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">0–9</code> to slots&nbsp;<code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">0–9</code>, digits&nbsp;<code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">A–F</code> to slots&nbsp;<code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">10–15</code>.</li>
+                <li>Target angle for digit <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">d</code>&nbsp;in slot <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">k</code> is<code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">θ(k(d))</code>.</li>
+            </ul>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e5e8ef;border-radius:8px;padding:12px 14px;">
+            <h3 style="font-size:1.05rem;line-height:1.2;margin-top:16px;margin-bottom:8px;color:#555;">3) Rotation logic</h3>
+            <ul style="margin:8px 0 8px 22px;">
+                <li>Display current angle <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">θ<sub>curr</sub></code>.</li>
+                <li>Display the next required change <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">Δθ</code>.</li>
+                <li>Choose either:
+                    <ul style="margin:8px 0 8px 22px;">
+                        <li><span style="display:inline-block;font-size:12px;color:#123;background:#e7eefc;padding:2px 8px;border-radius:999px;margin-right:6px;">Clockwise only</span> <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">Δθ = (θ(d) - θ<sub>curr</sub> + 360) mod 360</code></li>
+                        <li><span style="display:inline-block;font-size:12px;color:#123;background:#e7eefc;padding:2px 8px;border-radius:999px;margin-right:6px;">Shortest path</span> normalize to <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">[-180°, 180°)</code></li>
+                    </ul>
+                </li>
+                <li>Animate heading to the new angle for better visualization.&nbsp;</li>
+                <li>Update a log of past angular movements.</li>
+            </ul>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e5e8ef;border-radius:8px;padding:12px 14px;">
+            <h3 style="font-size:1.05rem;line-height:1.2;margin-top:16px;margin-bottom:8px;color:#555;">4) Visualization</h3>
+            <ul style="margin:8px 0 8px 22px;">
+                <li>HTML, Canvas, SVG, JOptionPane, etc. is fine.</li>
+                <li>Draw the circle with labeled digits.</li>
+                <li>Draw a clear heading indicator. Provide numeric readouts for <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">θ<sub>curr</sub></code> and <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">Δθ</code>.</li>
+                <li>Provide Play, Step, Reset controls. Keyboard shortcuts are a plus.</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2 style="font-size:1.25rem;line-height:1.2;margin-top:20px;margin-bottom:8px;">Run example</h2>
+    <pre style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f4f6f8;padding:8px;border-radius:6px;white-space:pre-wrap;">Input: "OK"
+ASCII → hex: 4F 4B → digits: 4, F, 4, B
+Angles: 4 → 90°, F → 337.5°, 4 → 90°, B → 247.5°
+At each step show θ_curr, target, and Δθ per your rotation policy.</pre>
+
+    <h2 style="font-size:1.25rem;line-height:1.2;margin-top:20px;margin-bottom:8px;">Outputs to show</h2>
+    <ul style="margin:8px 0 8px 22px;">
+        <li>ASCII input.</li>
+        <li>Hex octets and digit stream.</li>
+        <li>Current angle and next delta angle at each step.</li>
+        <li>A step log with time, digit, target angle, delta, and policy used.</li>
+    </ul>
+
+    <h2 style="font-size:1.25rem;line-height:1.2;margin-top:20px;margin-bottom:8px;">Submission (GitHub-only)</h2>
+    <ul style="margin:8px 0 8px 22px;">
+        <li>Source Code</li>
+        <li><code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">README.md</code> explaining your rotation policy and controls.</li>
+    </ul>
+
+    <h2 style="font-size:1.25rem;line-height:1.2;margin-top:20px;margin-bottom:8px;">Follow-up variants</h2>
+
+    <h3 style="font-size:1.05rem;line-height:1.2;margin-top:16px;margin-bottom:8px;color:#555;">Variant A: Sender checker robot</h3>
+    <p style="margin:8px 0;">The sender knows the message and the hex digits. The sender instance computes the same rotations you do and verifies your headings match within a tolerance.</p>
+    <ul style="margin:8px 0 8px 22px;">
+        <li>Expose a simple endpoint or function that returns your current heading and the last target digit.</li>
+        <li>The checker compares headings step by step and reports pass or the first mismatch.</li>
+    </ul>
+
+    <h3 style="font-size:1.05rem;line-height:1.2;margin-top:16px;margin-bottom:8px;color:#555;">Variant B: Split roles with a REST link</h3>
+    <p style="margin:8px 0;">Run two apps. The sender publishes rotations. The receiver animates rotations and later decodes from the observed digits.</p>
+    <div style="background:#f5f7fb;padding:12px 14px;border-radius:8px;">
+        <strong>Suggested API</strong>
+        <pre style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f4f6f8;padding:8px;border-radius:6px;white-space:pre-wrap;">GET /next-rotation
+→ { "mode":"targetAngle", "value": 247.5 }   // or { "mode":"digitIndex", "value": 11 }
+
+GET /state
+→ { "step": 7, "digit":"B", "index":11, "angle":247.5 }
+
+POST /receiver/log
+{ "step":7, "angle":247.5, "timestamp": "...", "observedDigit":"B" }</pre>
+        <ul style="margin:8px 0 8px 22px;">
+            <li>Sender converts ASCII to hex and serves either target angles or digit indices.</li>
+            <li>Receiver polls <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">/next-rotation</code>, animates, records angles, maps back to digits via circle geometry, and decodes to ASCII.</li>
+            <li>Receiver submits the decoded message and the step log.</li>
+        </ul>
+    </div>
+    <h2 style="font-size:1.25rem;line-height:1.2;margin-top:20px;margin-bottom:8px;">Constraints and hints</h2>
+    <ul style="margin:8px 0 8px 22px;">
+        <li>Use degrees for display. Use radians internally if you prefer.</li>
+        <li>Normalize angles to <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">[0°, 360°)</code>. For shortest path, normalize deltas to <code style="background:#f4f6f8;padding:1px 4px;border-radius:4px;">[-180°, 180°)</code>.</li>
+        <li>Treat A–F uppercase. Validate input.</li>
+        <li>Add a tolerance when converting an angle back to a digit. Suggest ±5°.</li>
+    </ul>
+
+    <h2 style="font-size:1.25rem;line-height:1.2;margin-top:20px;margin-bottom:8px;">Accessibility</h2>
+    <ul style="margin:8px 0 8px 22px;">
+        <li>Provide text labels for digits and numeric angle readouts.</li>
+        <li>Allow keyboard control for Step and Reset.</li>
+        <li>Use sufficient contrast for the dial and pointer.</li>
+    </ul>
+
+</div>
+</body>
+</html>
